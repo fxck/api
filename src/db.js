@@ -19,17 +19,17 @@ export function getPool() {
   return pool;
 }
 
-/** The rows seeded on first startup. */
+/** The rows seeded on first startup, each with a priority. */
 const SEED = [
-  { title: 'Wire up the shared contract package', done: true },
-  { title: 'Serve todos from Postgres', done: false },
-  { title: 'Render the list in the web service', done: false },
+  { title: 'Wire up the shared contract package', done: true, priority: 'high' },
+  { title: 'Serve todos from Postgres', done: false, priority: 'medium' },
+  { title: 'Render the list in the web service', done: false, priority: 'low' },
 ];
 
 /**
- * Idempotent startup migration: create the todos table if missing and seed
- * three rows exactly once (only when the table is empty). Safe to run on
- * every boot.
+ * Idempotent startup migration: create the todos table if missing, add the
+ * `priority` column (contract 1.1.0), seed three rows on first boot, and
+ * backfill priorities for the known seed rows. Safe to run on every boot.
  * @returns {Promise<void>}
  */
 export async function migrate() {
@@ -41,12 +41,25 @@ export async function migrate() {
       done  BOOLEAN NOT NULL DEFAULT false
     );
   `);
+  // Contract 1.1.0: add the priority column. Idempotent — existing rows get
+  // the default and are backfilled below.
+  await db.query(
+    `ALTER TABLE todos ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL DEFAULT 'medium';`
+  );
   const { rows } = await db.query('SELECT COUNT(*)::int AS count FROM todos');
   if (rows[0].count === 0) {
     for (const t of SEED) {
-      await db.query('INSERT INTO todos (title, done) VALUES ($1, $2)', [
+      await db.query(
+        'INSERT INTO todos (title, done, priority) VALUES ($1, $2, $3)',
+        [t.title, t.done, t.priority]
+      );
+    }
+  } else {
+    // Backfill priorities for the known seed rows migrated from 1.0.0.
+    for (const t of SEED) {
+      await db.query('UPDATE todos SET priority = $1 WHERE title = $2', [
+        t.priority,
         t.title,
-        t.done,
       ]);
     }
   }

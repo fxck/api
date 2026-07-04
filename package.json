@@ -10,7 +10,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@fxck/contracts": "github:fxck/contracts",
+    "@fxck/contracts": "file:vendor/fxck-contracts-1.1.0.tgz",
     "@hono/node-server": "^1.13.7",
     "hono": "^4.6.14",
     "pg": "^8.13.1"
