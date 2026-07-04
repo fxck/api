@@ -4,11 +4,7 @@ zerops:
       base: nodejs@22
       buildCommands:
         - npm ci
-      deployFiles:
-        - package.json
-        - package-lock.json
-        - src
-        - node_modules
+      deployFiles: [.]
       cache:
         - node_modules
     run:
