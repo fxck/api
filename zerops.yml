@@ -1,5 +1,26 @@
 zerops:
-  - setup: api
+  # dev half of the standard pair — buildFromGit clones fxck/api and builds
+  # with this setup (setup name matches the dev hostname `apidev`).
+  - setup: apidev
+    build:
+      base: nodejs@22
+      buildCommands:
+        - npm ci
+      deployFiles: [.]
+      cache:
+        - node_modules
+    run:
+      base: nodejs@22
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        DATABASE_URL: ${db_connectionString}
+        PORT: "3000"
+      start: node src/index.js
+  # stage half — receives the dev->stage cross-deploy for prod-like verify
+  # (setup name matches the stage hostname `apistage`).
+  - setup: apistage
     build:
       base: nodejs@22
       buildCommands:
