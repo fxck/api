@@ -16,7 +16,8 @@ export function createApp() {
 
   app.get('/todos', async (c) => {
     const { rows } = await getPool().query(
-      'SELECT id, title, done, priority FROM todos ORDER BY id ASC'
+      `SELECT id, title, done, priority, to_char(due_date, 'YYYY-MM-DD') AS "dueDate"
+         FROM todos ORDER BY id ASC`
     );
     return c.json(rows);
   });
