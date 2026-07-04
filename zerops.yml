@@ -1,0 +1,22 @@
+zerops:
+  - setup: api
+    build:
+      base: nodejs@22
+      buildCommands:
+        - npm ci
+      deployFiles:
+        - package.json
+        - package-lock.json
+        - src
+        - node_modules
+      cache:
+        - node_modules
+    run:
+      base: nodejs@22
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        DATABASE_URL: ${db_connectionString}
+        PORT: "3000"
+      start: node src/index.js
